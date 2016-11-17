@@ -1,16 +1,16 @@
-GCC=gcc -ansi -pedantic -Wall -o cchat
+GCC=gcc -ansi -pedantic -Wall -o chatServer
 CFLAGS=-a -ldflags '-s'
 
 all: build
 
 build:
-	$(GCC) cchat.c
+	$(GCC) chatServer.c
 
 run: build
-	./cchat
+	./chatServer
 
 stat:
-	$(GCC) $(CFLAGS) cchat.c
+	$(GCC) $(CFLAGS) chatServer.c
 
 clean:
-	rm cchat
+	rm chatServer

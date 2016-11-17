@@ -1,5 +1,5 @@
-cCHAT
-=====
+ChatServ
+========
 
 This is a simple example of a simple chat server, written in C
 
@@ -12,5 +12,5 @@ $ make
 
 Run the application with the following:
 ```sh
-$ ./cchat <port> <debug flag: 0/1>
+$ ./chatServer <port> <debug flag: 0/1>
 ```
