@@ -31,7 +31,7 @@ struct user {
  */
 int main(int argc, char **argv) {
 	int c = 1;
-	int i;
+	int i, j;
 	int sockfd;
 	int debug = 0;
 	int currcid = 1;
@@ -53,7 +53,9 @@ int main(int argc, char **argv) {
 		port = atoi(argv[1]);
 		debug = atoi(argv[2]);
 	}
-	for (i = 0; i <= 10; i++) {
+	
+	usertable[0].active = 1;
+	for (i = 1; i <= 10; i++) {
 		usertable[i].active = 0;
 	}
 
@@ -94,9 +96,8 @@ int main(int argc, char **argv) {
 
 		/* compose */
 		if(!strcmp(client_msg.s1, "JOIN")) {
-			/* gen unused cid */
+			/* find unused cid */
 			while (c) {
-				printf("%d\n", currcid);
 				if (usertable[currcid].active == 0) {
 					usertable[currcid].addr = client;
 					usertable[currcid].active = 1;
@@ -106,30 +107,56 @@ int main(int argc, char **argv) {
 					currcid++;
 				}
 			}
+			if (currcid > 10) {
+				currcid = 1;
+			}
 			c = 1;
 
 			serv_msg.cid = currcid-1;
-			printf("%d\n", currcid);
 			strcpy(serv_msg.s1, client_msg.s1);
 			strcpy(serv_msg.s2, hostname);
+
+			/* send */
+			if (debug) {
+				printf("DEBUG: Sending <%d %s %s>\n", serv_msg.cid, serv_msg.s1, serv_msg.s2);
+			}
+			for (j = 1; j <= 10; j++) {
+				client = usertable[j].addr;
+				sendto(sockfd, &serv_msg, sizeof(serv_msg)+1, 0, (struct sockaddr *) &client, sizeof(client));
+			}
 		} else if (!strcmp(client_msg.s1, "QUIT")) {
 			/* mark cid unused */
 			serv_msg.cid = abs(client_msg.cid);
 			usertable[client_msg.cid].active = 0;
 			strcpy(serv_msg.s1, client_msg.s1);
 			strcpy(serv_msg.s2, hostname);
+
+			/* send */
+			if (debug) {
+				printf("DEBUG: Sending <%d %s %s>\n", serv_msg.cid, serv_msg.s1, serv_msg.s2);
+			}
+			for (j = 1; j <= 10; j++) {
+				client = usertable[j].addr;
+				sendto(sockfd, &serv_msg, sizeof(serv_msg)+1, 0, (struct sockaddr *) &client, sizeof(client));
+			}
 		} else {
 			/* send to every cid but senders */
 			serv_msg.cid = client_msg.cid;
 			strcpy(serv_msg.s1, hostname);
 			strcpy(serv_msg.s2, client_msg.s2);
+
+			/* send */
+			if (debug) {
+				printf("DEBUG: Sending <%d %s %s>\n", serv_msg.cid, serv_msg.s1, serv_msg.s2);
+			}
+			for (j = 1; j <= 10; j++) {
+				client = usertable[j].addr;
+				if (j != client_msg.cid) {
+					sendto(sockfd, &serv_msg, sizeof(serv_msg)+1, 0, (struct sockaddr *) &client, sizeof(client));
+				}
+			}
 		}
 
-		/* send */
-		if (debug) {
-			printf("DEBUG: Sending <%d %s %s>\n", serv_msg.cid, serv_msg.s1, serv_msg.s2);
-		}
-		sendto(sockfd, &serv_msg, sizeof(serv_msg)+1, 0, (struct sockaddr *) &client, sizeof(client));
 	}
 	close(sockfd);
 	return 0;
